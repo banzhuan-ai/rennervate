@@ -1,0 +1,40 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.11'
+          - os: ubuntu-latest
+            python: '3.13'
+          - os: windows-latest
+            python: '3.12'
+          - os: macos-latest
+            python: '3.12'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install pytest build twine ruff
+      - run: python -m pip install --no-deps .
+      - run: python -m pytest -q
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: rennervate models
+      - run: rennervate --help
